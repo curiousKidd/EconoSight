@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get(
   '/',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     // 데이터베이스 연결 확인
     const pool = getPool();
     const connection = await pool.getConnection();

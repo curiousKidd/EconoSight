@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 요청 로깅
-app.use((req: Request, res: Response, next) => {
+app.use((req: Request, _res: Response, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
 });
@@ -29,7 +29,7 @@ app.use((req: Request, res: Response, next) => {
 app.use('/api', apiRoutes);
 
 // 루트 라우트
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({
     name: 'EconoSight API',
     version: '1.0.0',
@@ -42,7 +42,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use(errorHandler);
 
 // 404 핸들러
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     error: {

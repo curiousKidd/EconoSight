@@ -11,6 +11,7 @@ export interface NewsArticle {
   content: string;
   source?: string;
   publishedAt: string;
+  url?: string;
 }
 
 export interface AnalysisResult {
