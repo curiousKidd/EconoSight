@@ -53,6 +53,7 @@ export function stopScheduler(): void {
  * 매일 뉴스 수집 및 분석 실행
  */
 export async function runDailyAnalysis(): Promise<void> {
+  // 어제 날짜로 수집 (미국 증시는 한국 시간 기준 전날 밤~당일 새벽)
   const executionDate = getYesterdayDate();
   logger.info(`Running daily analysis for date: ${executionDate}`);
 

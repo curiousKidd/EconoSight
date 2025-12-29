@@ -24,7 +24,7 @@ interface NewsAPIResponse {
 }
 
 /**
- * NewsAPI를 사용하여 경제 뉴스를 수집합니다.
+ * RSS 피드를 사용하여 경제 뉴스를 수집합니다 (무료).
  *
  * @param fromDate 시작 날짜 (YYYY-MM-DD)
  * @param toDate 종료 날짜 (YYYY-MM-DD)
@@ -34,9 +34,28 @@ export async function collectEconomicNews(
   fromDate?: string,
   toDate?: string
 ): Promise<NewsArticle[]> {
-  if (!config.newsApi.apiKey) {
-    throw new Error('NewsAPI key is not configured');
+  // RSS 피드 방식 사용 (NewsAPI 불필요)
+  logger.info('Collecting news from RSS feeds...');
+
+  const rssSources = [
+    'https://feeds.bloomberg.com/markets/news.rss',
+    'https://www.reuters.com/rssFeed/businessNews',
+    'https://www.ft.com/?format=rss',
+  ];
+
+  const allArticles: NewsArticle[] = [];
+
+  for (const rssUrl of rssSources) {
+    try {
+      const articles = await collectFromRSS(rssUrl);
+      allArticles.push(...articles);
+    } catch (error: any) {
+      logger.error(`Failed to collect from RSS: ${rssUrl}`, error.message);
+      // 하나의 RSS 실패해도 계속 진행
+    }
   }
+
+  return allArticles;
 
   // 기본값: 어제 날짜
   if (!fromDate || !toDate) {
@@ -181,8 +200,7 @@ export async function collectFromSources(
 }
 
 /**
- * RSS 피드에서 뉴스 수집 (NewsAPI 대안)
- * 무료로 사용 가능한 대안
+ * RSS 피드에서 뉴스 수집 (무료)
  */
 export async function collectFromRSS(rssUrl: string): Promise<NewsArticle[]> {
   logger.info(`Collecting news from RSS: ${rssUrl}`);
@@ -193,7 +211,6 @@ export async function collectFromRSS(rssUrl: string): Promise<NewsArticle[]> {
     const response = await axios.get(rss2jsonUrl, {
       params: {
         rss_url: rssUrl,
-        api_key: 'YOUR_RSS2JSON_API_KEY', // 선택 사항
         count: 10,
       },
       timeout: 30000,
@@ -203,20 +220,23 @@ export async function collectFromRSS(rssUrl: string): Promise<NewsArticle[]> {
       throw new Error('RSS feed parsing failed');
     }
 
-    const articles: NewsArticle[] = response.data.items.map((item: any) => ({
-      title: item.title,
-      content: item.description || item.content || '',
-      source: response.data.feed.title,
-      publishedAt: item.pubDate,
-      url: item.link,
-    }));
+    const articles: NewsArticle[] = response.data.items
+      .filter((item: any) => item.title && item.description)
+      .map((item: any) => ({
+        title: item.title,
+        content: item.description || item.content || '',
+        source: response.data.feed.title || 'RSS Feed',
+        publishedAt: item.pubDate || new Date().toISOString(),
+        url: item.link,
+      }));
 
     logger.info(`Collected ${articles.length} articles from RSS`);
 
     return articles;
   } catch (error: any) {
     logger.error('Failed to collect from RSS:', error.message);
-    throw error;
+    // 에러 발생 시 빈 배열 반환 (다른 소스는 계속 진행)
+    return [];
   }
 }
 

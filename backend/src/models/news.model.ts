@@ -66,19 +66,25 @@ export class NewsModel {
     offset: number = 0
   ): Promise<EconomicNews[]> {
     const pool = getPool();
+    // LIMIT과 OFFSET은 정수로 확실히 변환
+    const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit))));
+    const safeOffset = Math.max(0, Math.floor(Number(offset)));
+
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT id, news_date, title, source, source_url, summary,
               affected_sectors, market_sentiment, sentiment_score, created_at
        FROM economic_news
        WHERE news_date = ? AND is_deleted = FALSE
        ORDER BY created_at DESC
-       LIMIT ? OFFSET ?`,
-      [date, limit, offset]
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      [date]
     );
 
     return rows.map((row) => ({
       ...row,
-      affected_sectors: row.affected_sectors ? JSON.parse(row.affected_sectors) : [],
+      affected_sectors: typeof row.affected_sectors === 'string'
+        ? JSON.parse(row.affected_sectors)
+        : row.affected_sectors || [],
     })) as EconomicNews[];
   }
 
@@ -97,26 +103,32 @@ export class NewsModel {
     const row = rows[0];
     return {
       ...row,
-      affected_sectors: row.affected_sectors ? JSON.parse(row.affected_sectors) : [],
+      affected_sectors: typeof row.affected_sectors === 'string'
+        ? JSON.parse(row.affected_sectors)
+        : row.affected_sectors || [],
     } as EconomicNews;
   }
 
   // 최신 뉴스 조회
   static async findLatest(limit: number = 10): Promise<EconomicNews[]> {
     const pool = getPool();
+    const safeLimit = Math.max(1, Math.min(50, Math.floor(Number(limit))));
+
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT id, news_date, title, source, source_url, summary,
               affected_sectors, market_sentiment, sentiment_score, created_at
        FROM economic_news
        WHERE is_deleted = FALSE
        ORDER BY news_date DESC, created_at DESC
-       LIMIT ?`,
-      [limit]
+       LIMIT ${safeLimit}`,
+      []
     );
 
     return rows.map((row) => ({
       ...row,
-      affected_sectors: row.affected_sectors ? JSON.parse(row.affected_sectors) : [],
+      affected_sectors: typeof row.affected_sectors === 'string'
+        ? JSON.parse(row.affected_sectors)
+        : row.affected_sectors || [],
     })) as EconomicNews[];
   }
 
@@ -223,10 +235,12 @@ export class NewsCollectionLogModel {
   // 최근 로그 조회
   static async findRecent(limit: number = 10): Promise<NewsCollectionLog[]> {
     const pool = getPool();
+    const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit))));
+
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT * FROM news_collection_logs
-       ORDER BY execution_date DESC LIMIT ?`,
-      [limit]
+       ORDER BY execution_date DESC LIMIT ${safeLimit}`,
+      []
     );
 
     return rows as NewsCollectionLog[];

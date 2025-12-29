@@ -90,7 +90,7 @@ const NewsModal = ({ news, onClose }: NewsModalProps) => {
                 {getSentimentEmoji(news.market_sentiment)} {news.market_sentiment}
               </span>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                점수: {news.sentiment_score?.toFixed(2) || '0.00'}
+                점수: {news.sentiment_score ? Number(news.sentiment_score).toFixed(2) : '0.00'}
               </span>
             </div>
           </div>

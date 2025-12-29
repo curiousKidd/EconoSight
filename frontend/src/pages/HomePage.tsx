@@ -6,9 +6,14 @@ import AdBanner from '../components/AdBanner';
 import { format } from 'date-fns';
 
 const HomePage = () => {
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  // 기본값: 어제 날짜 (스케줄러가 전날 뉴스를 수집하므로)
+  const getYesterdayDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+  };
+
+  const [selectedDate, setSelectedDate] = useState<string>(getYesterdayDate());
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['news', selectedDate],

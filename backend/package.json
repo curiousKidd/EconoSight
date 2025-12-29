@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "collect-news": "tsx src/scripts/collectNews.ts",
+    "generate-sample": "tsx src/scripts/generateSampleNews.ts",
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
