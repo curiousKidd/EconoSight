@@ -6,6 +6,7 @@ import logger from './utils/logger';
 import { errorHandler } from './utils/errorHandler';
 import { initDatabase, closeDatabase } from './models/database';
 import { startScheduler, stopScheduler } from './services/scheduler.service';
+import { fcmService } from './services/fcm.service';
 import apiRoutes from './api';
 
 const app: Application = express();
@@ -62,6 +63,9 @@ async function startServer(): Promise<void> {
     // 데이터베이스 연결
     await initDatabase();
     logger.info('Database initialized');
+
+    // FCM 초기화 (선택적)
+    fcmService.initialize();
 
     // 스케줄러 시작
     startScheduler();
